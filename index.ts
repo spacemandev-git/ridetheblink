@@ -31,7 +31,7 @@ const app = new Hono();
 
 app.use('/actions.json', serveStatic({ path: "./actions.json" }));
 app.use('/public/*', serveStatic({ root: "./" }));
-app.use('/', async (c) => c.redirect(""))
+app.use('/', async (c) => c.redirect("https://spacemandev.notion.site/Ride-the-Bus-b38a245fcfe84b98b0470ca7dbaf97a0?pvs=25"))
 app.use('*', cors({
     origin: ['*'], //TODO: Restrict to x.com or twitter.com
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
