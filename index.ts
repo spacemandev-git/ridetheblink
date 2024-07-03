@@ -142,7 +142,7 @@ app.post("/1/register", async (c) => {
         await prisma.confirmingTransactions.create({
             data: {
                 wallet: account,
-                pendingBonk: REGISTER_BONK_COST
+                pendingBonk: REGISTER_BONK_COST / (1e5)
             }
         })
 
@@ -940,7 +940,7 @@ app.get("/3/start", async (c) => {
     let buttons: ActionGetResponse = {
         icon: `${url}/public/bus.webp`,
         title: "Ride the Bus",
-        description: `If you're in the LOSING pool, click on the button to start an attempt for ${PHASE3_ATTEMPT_COST} BONK. Can play until your deck of cards runs out or you're out of BONK`,
+        description: `If you're in the LOSING pool, click on the button to start an attempt for ${PHASE3_ATTEMPT_COST / (1e5)} BONK. Can play until your deck of cards runs out or you're out of BONK`,
         label: "Start Attempt!"
     }
 
@@ -987,7 +987,7 @@ app.post("/3/start", async (c) => {
         await prisma.confirmingTransactions.create({
             data: {
                 wallet: account,
-                pendingBonk: PHASE3_ATTEMPT_COST
+                pendingBonk: PHASE3_ATTEMPT_COST / (1e5)
             }
         })
 
