@@ -91,7 +91,7 @@ app.post("/webhook", async (c) => {
 })
 
 
-async function createEmptyTransaction(account: string): Promise<VersionedTransaction> {
+async function createEmptyTransaction(account: string): Promise<string> {
     const playerKey = new PublicKey(account);
     const ix = SystemProgram.transfer({ fromPubkey: playerKey, toPubkey: playerKey, lamports: 1 });
     const msg = new TransactionMessage({
@@ -100,7 +100,7 @@ async function createEmptyTransaction(account: string): Promise<VersionedTransac
         instructions: [ix]
     }).compileToV0Message();
     const txn = new VersionedTransaction(msg);
-    return txn;
+    return Buffer.from(txn.serialize()).toString("base64");
 }
 
 /** Phase 1 */
@@ -113,7 +113,7 @@ app.get("/1/register", async (c) => {
     let buttons: ActionGetResponse = {
         icon: `${url}/public/bus.webp`,
         title: "Ride the Bus",
-        description: `Register to Ride the Bus for ${REGISTER_BONK_COST / (1e5)} $BONK. Rules at ${url}`,
+        description: `Register to Ride the Bus for ${REGISTER_BONK_COST / (1e5)} BONK. Rules at ${url}`,
         label: "Register!"
     }
 
