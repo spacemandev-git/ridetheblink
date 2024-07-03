@@ -931,7 +931,7 @@ app.get("/3/start", async (c) => {
     return c.json(buttons);
 })
 
-app.post("/3/attempt", async (c) => {
+app.post("/3/start", async (c) => {
     const { account } = await c.req.json();
     try {
         const user = await prisma.player.findFirst({ where: { wallet: account } });
