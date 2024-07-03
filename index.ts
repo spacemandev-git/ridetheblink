@@ -31,6 +31,7 @@ const app = new Hono();
 
 app.use('/actions.json', serveStatic({ path: "./actions.json" }));
 app.use('/public/*', serveStatic({ root: "./" }));
+app.use('/', async (c) => c.redirect(""))
 app.use('*', cors({
     origin: ['*'], //TODO: Restrict to x.com or twitter.com
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
