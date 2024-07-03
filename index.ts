@@ -87,7 +87,7 @@ app.post("/webhook", async (c) => {
 /**
  * Registers the wallet in our database for X bonk
  */
-const REGISTER_BONK_COST = 100
+const REGISTER_BONK_COST = 100 * (1e5);
 app.get("/1/register", async (c) => {
     let buttons: ActionGetResponse = {
         icon: `${url}/public/bus.webp`,
@@ -919,7 +919,7 @@ app.post("/3/review", async (c) => {
 /**
  * Phase 3: Start Attempt
  */
-const PHASE3_ATTEMPT_COST = 10
+const PHASE3_ATTEMPT_COST = 10 * (1e5);
 app.get("/3/start", async (c) => {
     let buttons: ActionGetResponse = {
         icon: `${url}/public/bus.webp`,
