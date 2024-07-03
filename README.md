@@ -18,3 +18,9 @@
 
 ## Phase 3
 
+`/3/review`
+`/3/start`  
+`/3/redblack`  
+`/3/highlow`  
+`/3/insideoutside`  
+`/3/suit`  
