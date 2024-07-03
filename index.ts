@@ -75,6 +75,14 @@ app.post("/webhook", async (c) => {
                             }
                         }
                     })
+                    await prisma.player.update({
+                        where: { wallet: sender },
+                        data: {
+                            bonk: {
+                                increment: amt
+                            }
+                        }
+                    })
                 }
             }
         }
