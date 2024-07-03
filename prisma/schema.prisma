@@ -12,3 +12,55 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model Player {
+  wallet String @id
+  points Int
+  deck   String
+  bonk   Int //BN
+}
+
+model ConfirmingTransactions {
+  wallet      String @id
+  pendingBonk Int
+}
+
+model Phase1 {
+  wallet       String @id
+  card1value   Int    @default(0)
+  card1suit    String @default("")
+  card1display String @default("")
+  card2value   Int    @default(0)
+  card2suit    String @default("")
+  card2display String @default("")
+  card3value   Int    @default(0)
+  card3suit    String @default("")
+  card3display String @default("")
+  card4value   Int    @default(0)
+  card4suit    String @default("")
+  card4display String @default("")
+}
+
+model Phase2 {
+  wallet String @id
+  guess1 Int
+  guess2 Int
+  guess3 Int
+  guess4 Int
+}
+
+model Phase3 {
+  wallet       String @id
+  card1value   Int    @default(0)
+  card1suit    String @default("")
+  card1display String @default("")
+  card2value   Int    @default(0)
+  card2suit    String @default("")
+  card2display String @default("")
+  card3value   Int    @default(0)
+  card3suit    String @default("")
+  card3display String @default("")
+  card4value   Int    @default(0)
+  card4suit    String @default("")
+  card4display String @default("")
+}

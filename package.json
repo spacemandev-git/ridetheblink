@@ -10,7 +10,14 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.11.4",
+    "@prisma/client": "5.16.1",
+    "@solana/actions": "^1.0.2",
+    "@solana/spl-token": "^0.4.7",
+    "@solana/web3.js": "^1.93.4",
+    "@types/knuth-shuffle-seeded": "^1.0.2",
+    "dotenv": "^16.4.5",
     "hono": "^4.4.9",
+    "knuth-shuffle-seeded": "^1.0.6",
     "prisma": "^5.16.1"
   }
 }
