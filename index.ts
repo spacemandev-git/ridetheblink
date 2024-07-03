@@ -1282,7 +1282,7 @@ app.get("/3/suit", async (c) => {
     return c.json(buttons);
 })
 
-app.post("/1/suit", async (c) => {
+app.post("/3/suit", async (c) => {
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     try {
