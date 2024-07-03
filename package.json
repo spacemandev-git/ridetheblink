@@ -18,6 +18,7 @@
     "dotenv": "^16.4.5",
     "hono": "^4.4.9",
     "knuth-shuffle-seeded": "^1.0.6",
-    "prisma": "^5.16.1"
+    "prisma": "^5.16.1",
+    "tsx": "^4.16.2"
   }
 }

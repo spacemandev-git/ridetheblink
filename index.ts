@@ -17,7 +17,7 @@ interface Card {
     suit: "Hearts" | "Diamonds" | "Clubs" | "Spades",
     display: string,
 }
-const url = "http://localhost:3000";
+const url = "https://ridetheblink.blinkgames.dev";
 const connection = new Connection(clusterApiUrl("mainnet-beta"), "confirmed");
 
 const bonkMint = new PublicKey("DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263");
