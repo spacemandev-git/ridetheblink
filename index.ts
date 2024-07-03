@@ -6,7 +6,7 @@ import { serveStatic } from "@hono/node-server/serve-static";
 import { readFileSync } from 'fs';
 import shuffle from 'knuth-shuffle-seeded';
 import type { ActionError, ActionGetResponse, ActionPostRequest, ActionPostResponse } from "@solana/actions";
-import { clusterApiUrl, Connection, PublicKey, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import { clusterApiUrl, Connection, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { createTransferCheckedInstruction, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { PrismaClient } from '@prisma/client';
 import type { WebhookEvent } from "./webhook-interface";
@@ -89,6 +89,19 @@ app.post("/webhook", async (c) => {
     }
     return c.status(200);
 })
+
+
+async function createEmptyTransaction(account: string): Promise<VersionedTransaction> {
+    const playerKey = new PublicKey(account);
+    const ix = SystemProgram.transfer({ fromPubkey: playerKey, toPubkey: playerKey, lamports: 1 });
+    const msg = new TransactionMessage({
+        payerKey: playerKey,
+        recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
+        instructions: [ix]
+    }).compileToV0Message();
+    const txn = new VersionedTransaction(msg);
+    return txn;
+}
 
 /** Phase 1 */
 
@@ -224,7 +237,8 @@ app.post("/1/redblack", async (c) => {
                     deck: JSON.stringify(playerDeck)
                 }
             })
-            throw new Error(`Your card was ${card1.display} and you choice ${choice}. You get 1 point. Move to Card 2`);
+            const message = `Your card was ${card1.display} and you choice ${choice}. You get 1 point. Move to Card 2`;
+            return c.json({ transaction: createEmptyTransaction(account), message }, 200)
         } else if (choice == "RED" && (card1!.suit == "Diamonds" || card1!.suit == "Hearts")) {
             await prisma.player.update({
                 where: { wallet: account },
@@ -235,7 +249,8 @@ app.post("/1/redblack", async (c) => {
                     deck: JSON.stringify(playerDeck)
                 }
             })
-            throw new Error(`Your card was ${card1.display} and you choice ${choice}. You get 1 point. Move to Card 2`);
+            const message = `Your card was ${card1.display} and you choice ${choice}. You get 1 point. Move to Card 2`;
+            return c.json({ transaction: createEmptyTransaction(account), message }, 200)
         } else {
             await prisma.player.update({
                 where: { wallet: account },
@@ -334,7 +349,8 @@ app.post("/1/highlow", async (c) => {
                         deck: JSON.stringify(playerDeck)
                     }
                 })
-                throw new Error(`Your first card was ${playerPhase1.card1display}. You chose ${choice}. Your second card is ${card2!.display}. You get 1 point. Move to Card 3`)
+                const message = `Your first card was ${playerPhase1.card1display}. You chose ${choice}. Your second card is ${card2!.display}. You get 1 point. Move to Card 3`;
+                return c.json({ transaction: createEmptyTransaction(account), message }, 200)
             } else if (card2!.value < playerPhase1.card1value && choice == "lower") {
                 await prisma.player.update({
                     where: { wallet: account },
@@ -345,7 +361,8 @@ app.post("/1/highlow", async (c) => {
                         deck: JSON.stringify(playerDeck)
                     }
                 })
-                throw new Error(`Your first card was ${playerPhase1.card1display}. You chose ${choice}. Your second card is ${card2!.display}. You get 1 point. Move to Card 3`)
+                const message = `Your first card was ${playerPhase1.card1display}. You chose ${choice}. Your second card is ${card2!.display}. You get 1 point. Move to Card 3`;
+                return c.json({ transaction: createEmptyTransaction(account), message }, 200)
             } else {
                 await prisma.player.update({
                     where: { wallet: account },
@@ -447,7 +464,8 @@ app.post("/1/insideoutside", async (c) => {
                         deck: JSON.stringify(playerDeck)
                     }
                 })
-                throw new Error(`Your 2nd card was ${playerPhase1.card2display}. You chose ${choice}. Your 3rd card was ${card3!.display}. You get 1 point. Move to Card 4`);
+                const message = `Your 2nd card was ${playerPhase1.card2display}. You chose ${choice}. Your 3rd card was ${card3!.display}. You get 1 point. Move to Card 4`;
+                return c.json({ transaction: createEmptyTransaction(account), message }, 200)
             } else if (choice == "outside" &&
                 (card3!.value < Math.min(playerPhase1.card1value, playerPhase1.card2value) ||
                     card3!.value > Math.max(playerPhase1.card1value, playerPhase1.card2value))) {
@@ -460,7 +478,8 @@ app.post("/1/insideoutside", async (c) => {
                         deck: JSON.stringify(playerDeck)
                     }
                 })
-                throw new Error(`Your 2nd card was ${playerPhase1.card2display}. You chose ${choice}. Your 3rd card was ${card3!.display}. You get 1 point. Move to Card 4`);
+                const message = `Your 2nd card was ${playerPhase1.card2display}. You chose ${choice}. Your 3rd card was ${card3!.display}. You get 1 point. Move to Card 4`;
+                return c.json({ transaction: createEmptyTransaction(account), message }, 200)
             } else {
                 await prisma.player.update({
                     where: { wallet: account },
@@ -563,7 +582,8 @@ app.post("/1/suit", async (c) => {
                     deck: JSON.stringify(playerDeck)
                 }
             })
-            throw new Error(`Your card was ${card4!.display} and your choice ${choice}. You get 1 point. Check in tomorrow for phase 2.`);
+            const message = `Your card was ${card4!.display} and your choice ${choice}. You get 1 point. Check in tomorrow for phase 2.`;
+            return c.json({ transaction: createEmptyTransaction(account), message }, 200)
         } else {
             await prisma.player.update({
                 where: { wallet: account },
@@ -819,7 +839,8 @@ app.post("/2/:card/guess", async (c) => {
                     points: { increment: 1 }
                 }
             })
-            throw new Error(`You guessed within 10%. You get 1 point`);
+            const message = `You guessed within 10%. You get 1 point`;
+            return c.json({ transaction: createEmptyTransaction(account), message }, 200);
         } else if (percentage > 0.01) {
             await prisma.player.update({
                 where: {
@@ -829,7 +850,8 @@ app.post("/2/:card/guess", async (c) => {
                     points: { increment: 3 }
                 }
             })
-            throw new Error(`You guessed within 5%. You get 3 points`);
+            const message = `You guessed within 5%. You get 3 point`;
+            return c.json({ transaction: createEmptyTransaction(account), message }, 200);
         } else if (percentage >= 0) {
             await prisma.player.update({
                 where: {
@@ -839,7 +861,8 @@ app.post("/2/:card/guess", async (c) => {
                     points: { increment: 5 }
                 }
             })
-            throw new Error(`You guessed within 1%. You get 5 points`);
+            const message = `You guessed within 1%. You get 5 point`;
+            return c.json({ transaction: createEmptyTransaction(account), message }, 200);
         }
     } catch (e: any) {
         const error: ActionError = { message: e.message }
@@ -1062,7 +1085,8 @@ app.post("/3/redblack", async (c) => {
         })
         if (((choice == "BLACK" && (card1!.suit == "Clubs" || card1!.suit == "Spades"))) ||
             ((choice == "RED" && (card1!.suit == "Diamonds" || card1!.suit == "Hearts")))) {
-            throw new Error(`Your card was ${card1.display} and you choice ${choice}. You got 1 correct. Move to Card 2`);
+            const message = `Your card was ${card1.display} and you choice ${choice}. You got 1 correct. Move to Card 2`;
+            return c.json({ transaction: createEmptyTransaction(account), message }, 200);
         } else {
             await prisma.phase3.delete({ where: { wallet: account } });
             if (playerDeck.length < 4) {
@@ -1141,18 +1165,13 @@ app.post("/3/highlow", async (c) => {
                     card2value: card2?.value
                 }
             })
-            if (card2!.value > playerPhase3.card1value && choice == "higher") {
+            if ((card2!.value > playerPhase3.card1value && choice == "higher") || ((card2!.value < playerPhase3.card1value && choice == "lower"))) {
                 await prisma.player.update({
                     where: { wallet: account },
                     data: { deck: JSON.stringify(playerDeck) }
                 })
-                throw new Error(`Your 1st Card is ${playerPhase3.card1display} and 2nd card is ${card2!.display} and you chose ${choice}. Move to Card 3`)
-            } else if (card2!.value < playerPhase3.card1value && choice == "lower") {
-                await prisma.player.update({
-                    where: { wallet: account },
-                    data: { deck: JSON.stringify(playerDeck) }
-                })
-                throw new Error(`Your 1st Card is ${playerPhase3.card1display} and 2nd card is ${card2!.display} and you chose ${choice}. Move to Card 3`)
+                const message = `Your 1st Card is ${playerPhase3.card1display} and 2nd card is ${card2!.display} and you chose ${choice}. Move to Card 3`;
+                return c.json({ transaction: createEmptyTransaction(account), message }, 200);
             } else {
                 await prisma.phase3.delete({ where: { wallet: account } });
                 if (playerDeck.length < 4) {
@@ -1239,7 +1258,8 @@ app.post("/3/insideoutside", async (c) => {
                     where: { wallet: account },
                     data: { deck: JSON.stringify(playerDeck) }
                 })
-                throw new Error(`Your 2nd card was ${playerPhase3.card2display} and 3rd card was ${card3!.display} and you chose ${choice}. Move to Card 4`);
+                const message = `Your 2nd card was ${playerPhase3.card2display} and 3rd card was ${card3!.display} and you chose ${choice}. Move to Card 4`;
+                return c.json({ transaction: createEmptyTransaction(account), message }, 200);
             } else if (choice == "outside" &&
                 (card3!.value < Math.min(playerPhase3.card1value, playerPhase3.card2value) ||
                     card3!.value > Math.max(playerPhase3.card1value, playerPhase3.card2value))) {
@@ -1247,7 +1267,8 @@ app.post("/3/insideoutside", async (c) => {
                     where: { wallet: account },
                     data: { deck: JSON.stringify(playerDeck) }
                 })
-                throw new Error(`Your 2nd card was ${playerPhase3.card2display} and 3rd card was ${card3!.display} and you chose ${choice}. Move to Card 4`);
+                const message = `Your 2nd card was ${playerPhase3.card2display} and 3rd card was ${card3!.display} and you chose ${choice}. Move to Card 4`;
+                return c.json({ transaction: createEmptyTransaction(account), message }, 200);
             } else {
                 await prisma.phase3.delete({ where: { wallet: account } });
                 if (playerDeck.length < 4) {
@@ -1345,7 +1366,8 @@ app.post("/3/suit", async (c) => {
                     deck: JSON.stringify(playerDeck)
                 }
             })
-            throw new Error(`Your card was ${card4!.display} and you chose ${choice}. You get 1 point. Congrats, you're no longer a loser!`);
+            const message = `Your card was ${card4!.display} and you chose ${choice}. You get 1 point. Congrats, you're no longer a loser!`;
+            return c.json({ transaction: createEmptyTransaction(account), message }, 200);
         } else {
             await prisma.phase3.delete({ where: { wallet: account } });
             if (playerDeck.length < 4) {
