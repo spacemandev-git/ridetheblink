@@ -598,7 +598,7 @@ app.post("/ridethebus/1/review", async (c) => {
             throw new Error("Please play Red/Black before you can review your cards")
         }
 
-        throw new Error(`Your cards are: ${playerPhase1.card1display}, ${playerPhase1.card2display}, ${playerPhase1.card3display}, ${playerPhase1.card4display}`)
+        throw new Error(`Your cards are: ${playerPhase1.card1display}, ${playerPhase1.card2display}, ${playerPhase1.card3display}, ${playerPhase1.card4display}. You currently have ${user.points} points.`)
     } catch (e: any) {
         const error: ActionError = { message: e.message }
         return c.json(error, 400);
@@ -610,37 +610,255 @@ app.post("/ridethebus/1/review", async (c) => {
 /** Phase 2 */
 
 /**
- * Phase 2: Card 1
- * They can review their Card 1 and are given how many total players there are with Card 1's in the game.
+ * Phase 2: Card 1-4
+ * They can review their Card 1-4 and are given how many total players there are with Card 1-4's in the game.
  * They must guess how many players have the same value card as them. 
  * If they guess within 10% of the actual value they get 1 point, 2 points for 5%, 3 points for 1 %
  */
 
-/**
- * Phase 2: Card 2
- * They can review their Card 2 and are given how many total players there are with Card 2's in the game.
- * They must guess how many players have the same value card as them. 
- * If they guess within 10% of the actual value they get 1 point, 2 points for 5%, 3 points for 1 %
- */
+app.get("/ridethebus/2/:card", async (c) => {
+    try {
+        const cardNum = c.req.param("card") as string;
+        let totalPlayers = 0;
 
-/**
- * Phase 2: Card 3
- * They can review their Card 3 and are given how many total players there are with Card 3's in the game.
- * They must guess how many players have the same value card as them. 
- * If they guess within 10% of the actual value they get 1 point, 2 points for 5%, 3 points for 1 %
- */
+        switch (cardNum) {
+            case "1":
+                totalPlayers = await prisma.phase1.count({ where: { card1value: { gt: 0 } } });
+                break;
+            case "2":
+                totalPlayers = await prisma.phase1.count({ where: { card2value: { gt: 0 } } });
+                break;
+            case "3":
+                totalPlayers = await prisma.phase1.count({ where: { card3value: { gt: 0 } } });
+                break;
+            case "4":
+                totalPlayers = await prisma.phase1.count({ where: { card4value: { gt: 0 } } });
+                break;
+            default:
+                throw new Error("Invalid URL!")
+        }
 
-/**
- * Phase 2: Card 4
- * They can review their Card 4 and are given how many total players there are with Card 4's in the game.
- * They must guess how many players have the same value card as them. 
- * If they guess within 10% of the actual value they get 1 point, 2 points for 5%, 3 points for 1 %
- */
+        let buttons: ActionGetResponse = {
+            icon: `${url}/public/bus.webp`,
+            title: `Phase 2; Card ${cardNum}`,
+            description: `${totalPlayers} have a card ${cardNum}. How many of them picked the same *value* as you? Suit doesn't matter? 1pt for guessing within 10%, 3pts for 5%, and 5pts for 1%.`,
+            label: "Phase 2",
+            links: {
+                actions: [
+                    {
+                        href: `/ridethebus/2/review/${cardNum}`,
+                        label: `Review Phase 1 Card ${cardNum}`
+                    },
+                    {
+                        href: `/ridethebus/2/guess/${cardNum}?q={guess}`,
+                        label: `Guess`,
+                        parameters: [{ name: "guess" }]
+                    }
+                ]
+            }
+        }
+
+        return c.json(buttons);
+    } catch (e: any) {
+        const response: ActionError = { message: e.message }
+        return c.json(response, 500)
+    }
+
+})
+
+app.post("/ridethebus/2/review/:card", async (c) => {
+    const { account } = await c.req.json();
+    const accountKey = new PublicKey(account);
+    try {
+        const user = await prisma.player.findFirst({ where: { wallet: account } });
+        if (!user) { throw new Error("You didn't register in round 1. Wait til next game to play!") }
+
+        const playerPhase1 = await prisma.phase1.findFirst({ where: { wallet: account } });
+        if (!playerPhase1) {
+            throw new Error("You never even played Red/Black")
+        }
+
+        const cardNum = c.req.param("card") as string;
+
+        switch (cardNum) {
+            case "1":
+                throw new Error(`Your Card ${cardNum} was ${playerPhase1.card1display}`)
+                break;
+            case "2":
+                throw new Error(`Your Card ${cardNum} was ${playerPhase1.card2display}`)
+                break;
+            case "3":
+                throw new Error(`Your Card ${cardNum} was ${playerPhase1.card3display}`)
+                break;
+            case "4":
+                throw new Error(`Your Card ${cardNum} was ${playerPhase1.card4display}`)
+                break;
+            default:
+                throw new Error("Invalid URL!")
+        }
+
+    } catch (e: any) {
+        const error: ActionError = { message: e.message }
+        return c.json(error, 400);
+    }
+})
+
+app.post("/ridethebus/2/guess/:card", async (c) => {
+    const { account } = await c.req.json();
+    const accountKey = new PublicKey(account);
+    const cardNum = c.req.param("card") as string;
+    try {
+        const user = await prisma.player.findFirst({ where: { wallet: account } });
+        if (!user) { throw new Error("You didn't register in round 1. Wait til next game to play!") }
+
+        const playerPhase1 = await prisma.phase1.findFirst({ where: { wallet: account } });
+        if (!playerPhase1) {
+            throw new Error("You never even played Red/Black")
+        }
+
+
+        const guess = parseInt(c.req.query("q") ? c.req.query("q")! : "0");
+        let cardPlayers = 0;
+        let percentage: number = 1.0;
+        const playerPhase2 = await prisma.phase2.findFirst({ where: { wallet: account } });
+
+        switch (cardNum) {
+            case "1":
+                if (playerPhase1.card1value == 0) {
+                    throw new Error("You never played step 1 of phase 1");
+                }
+                cardPlayers = await prisma.phase1.count({ where: { card1value: playerPhase1.card1value } });
+                percentage = guess / cardPlayers;
+
+                if (playerPhase2) {
+                    throw new Error("You've already guessed for this card!")
+                }
+                await prisma.phase2.create({
+                    data: {
+                        wallet: account,
+                        guess1: guess
+                    }
+                })
+                break;
+            case "2":
+                if (playerPhase1.card2value == 0) {
+                    throw new Error("You never played step 2 of phase 1");
+                }
+                cardPlayers = await prisma.phase1.count({ where: { card1value: playerPhase1.card2value } });
+                percentage = guess / cardPlayers;
+                if (playerPhase2?.guess2 != 0) {
+                    throw new Error("You've already guessed for this step!")
+                }
+                await prisma.phase2.update({
+                    where: { wallet: account },
+                    data: {
+                        guess2: guess
+                    }
+                })
+                break;
+            case "3":
+                if (playerPhase1.card3value == 0) {
+                    throw new Error("You never played step 3 of phase 1");
+                }
+                cardPlayers = await prisma.phase1.count({ where: { card1value: playerPhase1.card3value } });
+                percentage = guess / cardPlayers;
+                if (playerPhase2?.guess3 != 0) {
+                    throw new Error("You've already guessed for this step!")
+                }
+                await prisma.phase2.update({
+                    where: { wallet: account },
+                    data: {
+                        guess3: guess
+                    }
+                })
+                break;
+            case "4":
+                if (playerPhase1.card4value == 0) {
+                    throw new Error("You never played step 4 of phase 1");
+                }
+                cardPlayers = await prisma.phase1.count({ where: { card1value: playerPhase1.card4value } });
+                percentage = guess / cardPlayers;
+                if (playerPhase2?.guess4 != 0) {
+                    throw new Error("You've already guessed for this step!")
+                }
+                await prisma.phase2.update({
+                    where: { wallet: account },
+                    data: {
+                        guess4: guess
+                    }
+                })
+                break;
+            default:
+                throw new Error("Invalid URL!")
+        }
+        if (percentage > 0.1) {
+            throw new Error(`Your guess was ${guess} which is not within 10% of the actual number.`)
+        } else if (percentage > 0.05) {
+            await prisma.player.update({
+                where: {
+                    wallet: account
+                },
+                data: {
+                    points: { increment: 1 }
+                }
+            })
+            throw new Error(`You guessed within 10%. You get 1 point`);
+        } else if (percentage > 0.01) {
+            await prisma.player.update({
+                where: {
+                    wallet: account
+                },
+                data: {
+                    points: { increment: 3 }
+                }
+            })
+            throw new Error(`You guessed within 5%. You get 3 points`);
+        } else if (percentage >= 0) {
+            await prisma.player.update({
+                where: {
+                    wallet: account
+                },
+                data: {
+                    points: { increment: 5 }
+                }
+            })
+            throw new Error(`You guessed within 1%. You get 5 points`);
+        }
+    } catch (e: any) {
+        const error: ActionError = { message: e.message }
+        return c.json(error, 400);
+    }
+})
 
 /**
  * Phase 2: Review 
  * They can see how many points they have 
  */
+app.get("/ridethebus/2/review", async (c) => {
+    let buttons: ActionGetResponse = {
+        icon: `${url}/public/bus.webp`,
+        title: "Phase 2 Review",
+        description: `Review how many points you have`,
+        label: "Review",
+    }
+
+    return c.json(buttons);
+})
+
+app.post("/ridethebus/2/review", async (c) => {
+    const { account } = await c.req.json();
+    const accountKey = new PublicKey(account);
+    try {
+        const user = await prisma.player.findFirst({ where: { wallet: account } });
+        if (!user) { throw new Error("You have to register first!") }
+
+        throw new Error(`You currently have ${user.points} points.`)
+    } catch (e: any) {
+        const error: ActionError = { message: e.message }
+        return c.json(error, 400);
+    }
+})
+
 
 /** Phase 2 */
 

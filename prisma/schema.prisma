@@ -43,10 +43,10 @@ model Phase1 {
 
 model Phase2 {
   wallet String @id
-  guess1 Int
-  guess2 Int
-  guess3 Int
-  guess4 Int
+  guess1 Int    @default(0)
+  guess2 Int    @default(0)
+  guess3 Int    @default(0)
+  guess4 Int    @default(0)
 }
 
 model Phase3 {
