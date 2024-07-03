@@ -92,7 +92,7 @@ app.get("/1/register", async (c) => {
     let buttons: ActionGetResponse = {
         icon: `${url}/public/bus.webp`,
         title: "Ride the Bus",
-        description: `Register to Ride the Bus for ${REGISTER_BONK_COST} $BONK. Rules at ${url}`,
+        description: `Register to Ride the Bus for ${REGISTER_BONK_COST / (1e5)} $BONK. Rules at ${url}`,
         label: "Register!"
     }
 
@@ -123,6 +123,14 @@ app.post("/1/register", async (c) => {
             message: `Registering to play Ride the Bus!`
         }
 
+        await prisma.player.create({
+            data: {
+                wallet: account,
+                points: 0,
+                deck: "",
+                bonk: 0
+            }
+        })
         await prisma.confirmingTransactions.create({
             data: {
                 wallet: account,
