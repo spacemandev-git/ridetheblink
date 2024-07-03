@@ -903,9 +903,11 @@ app.post("/3/review", async (c) => {
         }))[0].points;
 
         if (user.points == highestPointTotal) {
-            throw new Error(`You are currently in the winning pool, there's ${winningPlayers} total winning players.`)
+            throw new Error(`You are currently in the WINNING pool, there's ${winningPlayers} total winning players.`)
         } else if (user.points == lowestPointTotal) {
-            throw new Error(`You are currently in the losing pool.`)
+            throw new Error(`You are currently in the LOSING pool.`)
+        } else {
+            throw new Error(`You are in the AVERAGE pool.`)
         }
 
     } catch (e: any) {
@@ -915,20 +917,432 @@ app.post("/3/review", async (c) => {
 })
 
 /**
+ * Phase 3: Start Attempt
+ */
+const PHASE3_ATTEMPT_COST = 10
+app.get("/3/start", async (c) => {
+    let buttons: ActionGetResponse = {
+        icon: `${url}/public/bus.webp`,
+        title: "Ride the Bus",
+        description: `If you're in the LOSING pool, click on the button to start an attempt for ${PHASE3_ATTEMPT_COST} BONK. Can play until your deck of cards runs out or you're out of BONK`,
+        label: "Start Attempt!"
+    }
+
+    return c.json(buttons);
+})
+
+app.post("/3/attempt", async (c) => {
+    const { account } = await c.req.json();
+    try {
+        const user = await prisma.player.findFirst({ where: { wallet: account } });
+        if (!user) {
+            throw new Error("You're already registered!")
+        }
+
+        const lowestPointTotal = (await prisma.player.findMany({
+            orderBy: {
+                points: "asc"
+            },
+            take: 1
+        }))[0].points;
+        if (user.points != lowestPointTotal) {
+            throw new Error("You're not in the LOSING pool.")
+        }
+        const playerDeck: Card[] = JSON.parse(user.deck);
+        if (playerDeck.length < 4) {
+            throw new Error("Your deck has run out of cards, no more attempts can be made!")
+        }
+
+        const accountKey = new PublicKey(account);
+        const sourceBonkATA = getAssociatedTokenAddressSync(bonkMint, accountKey);
+
+        const ix = createTransferCheckedInstruction(sourceBonkATA, bonkMint, serverBonkATA, accountKey, PHASE3_ATTEMPT_COST, bonkDecimals);
+        const msg = new TransactionMessage({
+            payerKey: accountKey,
+            recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
+            instructions: [ix]
+        }).compileToV0Message();
+        const txn = new VersionedTransaction(msg);
+        const response: ActionPostResponse = {
+            transaction: Buffer.from(txn.serialize()).toString("base64"),
+            message: `Starting Phase3 Attempt`
+        }
+
+        await prisma.confirmingTransactions.create({
+            data: {
+                wallet: account,
+                pendingBonk: PHASE3_ATTEMPT_COST
+            }
+        })
+
+        return c.json(response, 200)
+    } catch (e: any) {
+        const error: ActionError = {
+            message: e.message
+        }
+        return c.json(error, 400);
+    }
+})
+
+
+/**
  * Phase 3: Red/Black
  */
+app.get("/3/redblack", async (c) => {
+    let buttons: ActionGetResponse = {
+        icon: `${url}/public/bus.webp`,
+        title: "Red / Black",
+        description: `Is your first card a RED or BLACK card?`,
+        label: "Red/Black",
+        links: {
+            actions: [
+                {
+                    href: `/3/redblack?q=RED`,
+                    label: "RED"
+                },
+                {
+                    href: `/3/redblack?q=BLACK`,
+                    label: "BLACK"
+                }
+            ]
+        }
+    }
 
+    return c.json(buttons);
+})
+
+app.post("/3/redblack", async (c) => {
+    const { account } = await c.req.json();
+    const accountKey = new PublicKey(account);
+    try {
+        const user = await prisma.player.findFirst({ where: { wallet: account } });
+        if (!user) { throw new Error("User was never registered!") }
+        const pendingBonkBalance = await prisma.confirmingTransactions.findFirst({ where: { wallet: account } })
+        if (pendingBonkBalance!.pendingBonk > 0) {
+            throw new Error("You have unconfirmed bonk balance left to pay!")
+        }
+
+        const playerPhase3 = await prisma.phase3.findFirst({ where: { wallet: account } });
+        if (playerPhase3) {
+            throw new Error("You're already past this step")
+        }
+
+        const playerDeck: Card[] = JSON.parse(user.deck);
+
+        const choice = c.req.query("q") as "RED" | "BLACK";
+        const card1 = playerDeck.pop() as Card;
+
+        await prisma.phase3.create({
+            data: {
+                wallet: account,
+                card1display: card1!.display,
+                card1suit: card1!.suit,
+                card1value: card1!.value
+            }
+        })
+        await prisma.player.update({
+            where: { wallet: account },
+            data: { deck: JSON.stringify(playerDeck) }
+        })
+        if (((choice == "BLACK" && (card1!.suit == "Clubs" || card1!.suit == "Spades"))) ||
+            ((choice == "RED" && (card1!.suit == "Diamonds" || card1!.suit == "Hearts")))) {
+            throw new Error(`Your card was ${card1.display}. You got 1 correct. Move to Card 2`);
+        } else {
+            await prisma.phase3.delete({ where: { wallet: account } });
+            if (playerDeck.length < 4) {
+                throw new Error(`Your card was ${card1.display}. You have less than four cards left. No more attempts can be made.`)
+            } else {
+                throw new Error(`Your card was ${card1.display}. You can restart the attempt`)
+            }
+        }
+    } catch (e: any) {
+        const error: ActionError = { message: e.message }
+        return c.json(error, 400);
+    }
+})
 /**
  * Phase 3: High/Low
  */
+app.get("/3/highlow", async (c) => {
+    let buttons: ActionGetResponse = {
+        icon: `${url}/public/bus.webp`,
+        title: "High/ Low",
+        description: `Is your second card higher or lower than your first card?`,
+        label: "High/Low",
+        links: {
+            actions: [
+                {
+                    href: `/3/highlow?q=review`,
+                    label: "Review Card 1"
+                },
+                {
+                    href: `/3/highlow?q=higher`,
+                    label: "HIGHER"
+                },
+                {
+                    href: `/3/highlow?q=lower`,
+                    label: "LOWER"
+                }
+            ]
+        }
+    }
 
+    return c.json(buttons);
+})
+
+app.post("/3/highlow", async (c) => {
+    const { account } = await c.req.json();
+    const accountKey = new PublicKey(account);
+    try {
+        const user = await prisma.player.findFirst({ where: { wallet: account } });
+        if (!user) { throw new Error("You never registered!") }
+        const pendingBonkBalance = await prisma.confirmingTransactions.findFirst({ where: { wallet: account } })
+        if (pendingBonkBalance!.pendingBonk > 0) {
+            throw new Error("You have unconfirmed bonk balance left to pay!")
+        }
+
+        const playerPhase3 = await prisma.phase3.findFirst({ where: { wallet: account } });
+        if (!playerPhase3 || playerPhase3.card1value == 0) {
+            throw new Error("Please play Red/Black before you play High/Low")
+        }
+
+        if (playerPhase3.card2value != 0) {
+            throw new Error(`You've already played this. Your card was ${playerPhase3.card2display}`)
+        }
+
+        const playerDeck: Card[] = JSON.parse(user.deck);
+        const choice = c.req.query("q") as "review" | "higher" | "lower";
+
+        if (choice == "review") {
+            throw new Error(`Your first card was ${playerPhase3.card1display}`);
+        } else {
+            const card2 = playerDeck.pop();
+            await prisma.phase1.update({
+                where: { wallet: account },
+                data: {
+                    card2display: card2?.display,
+                    card2suit: card2?.suit,
+                    card2value: card2?.value
+                }
+            })
+            if (card2!.value > playerPhase3.card1value && choice == "higher") {
+                await prisma.player.update({
+                    where: { wallet: account },
+                    data: { deck: JSON.stringify(playerDeck) }
+                })
+                throw new Error(`Your second card is ${card2!.display}. Move to Card 3`)
+            } else if (card2!.value < playerPhase3.card1value && choice == "lower") {
+                await prisma.player.update({
+                    where: { wallet: account },
+                    data: { deck: JSON.stringify(playerDeck) }
+                })
+                throw new Error(`Your second card is ${card2!.display}. Move to Card 3`)
+            } else {
+                await prisma.phase3.delete({ where: { wallet: account } });
+                if (playerDeck.length < 4) {
+                    throw new Error(`Your card was ${card2!.display}. You have less than four cards left. No more attempts can be made.`)
+                } else {
+                    throw new Error(`Your card was ${card2!.display}. You can restart the attempt`)
+                }
+            }
+        }
+    } catch (e: any) {
+        const error: ActionError = { message: e.message }
+        return c.json(error, 400);
+    }
+})
 /**
  * Phase 3: Inside/Outside
  */
+app.get("/3/insideoutside", async (c) => {
+    let buttons: ActionGetResponse = {
+        icon: `${url}/public/bus.webp`,
+        title: "Inside / Outside",
+        description: `Is your third card inside your first two cards or outside?`,
+        label: "High/Low",
+        links: {
+            actions: [
+                {
+                    href: `/3/insideoutside?q=review`,
+                    label: "Review Cards 1 & 2"
+                },
+                {
+                    href: `/3/insideoutside?q=inside`,
+                    label: "INSIDE"
+                },
+                {
+                    href: `/3/insideoutside?q=outside`,
+                    label: "OUTSIDE"
+                }
+            ]
+        }
+    }
+
+    return c.json(buttons);
+})
+
+app.post("/3/insideoutside", async (c) => {
+    const { account } = await c.req.json();
+    const accountKey = new PublicKey(account);
+    try {
+        const user = await prisma.player.findFirst({ where: { wallet: account } });
+        if (!user) { throw new Error("You never registered!") }
+        const pendingBonkBalance = await prisma.confirmingTransactions.findFirst({ where: { wallet: account } })
+        if (pendingBonkBalance!.pendingBonk > 0) {
+            throw new Error("You have unconfirmed bonk balance left to pay!")
+        }
+
+        const playerPhase3 = await prisma.phase1.findFirst({ where: { wallet: account } });
+        if (!playerPhase3 || playerPhase3.card2value == 0) {
+            throw new Error("Please play High/Low before you play Inside/Outside")
+        }
+
+        if (playerPhase3.card3value != 0) {
+            throw new Error(`You've already played this. Your card was ${playerPhase3.card3display}`)
+        }
+
+        const playerDeck: Card[] = JSON.parse(user.deck);
+        const choice = c.req.query("q") as "review" | "inside" | "outside";
+
+        if (choice == "review") {
+            throw new Error(`Your cards are: ${playerPhase3.card1display} and ${playerPhase3.card2display}`);
+        } else {
+            const card3 = playerDeck.pop();
+            await prisma.phase1.update({
+                where: { wallet: account },
+                data: {
+                    card3display: card3?.display,
+                    card3suit: card3?.suit,
+                    card3value: card3?.value
+                }
+            })
+            if (choice == "inside" &&
+                (card3!.value > Math.min(playerPhase3.card1value, playerPhase3.card2value) &&
+                    card3!.value < Math.max(playerPhase3.card1value, playerPhase3.card2value))) {
+                await prisma.player.update({
+                    where: { wallet: account },
+                    data: { deck: JSON.stringify(playerDeck) }
+                })
+                throw new Error(`Your card was ${card3!.display}. Move to Card 4`);
+            } else if (choice == "outside" &&
+                (card3!.value < Math.min(playerPhase3.card1value, playerPhase3.card2value) ||
+                    card3!.value > Math.max(playerPhase3.card1value, playerPhase3.card2value))) {
+                await prisma.player.update({
+                    where: { wallet: account },
+                    data: { deck: JSON.stringify(playerDeck) }
+                })
+                throw new Error(`Your card was ${card3!.display}. Move to Card 4`);
+            } else {
+                await prisma.phase3.delete({ where: { wallet: account } });
+                if (playerDeck.length < 4) {
+                    throw new Error(`Your card was ${card3!.display}. You have less than four cards left. No more attempts can be made.`)
+                } else {
+                    throw new Error(`Your card was ${card3!.display}. You can restart the attempt`)
+                }
+            }
+        }
+    } catch (e: any) {
+        const error: ActionError = { message: e.message }
+        return c.json(error, 400);
+    }
+})
 
 /**
  * Phase 3: Suit
  */
+
+app.get("/3/suit", async (c) => {
+    let buttons: ActionGetResponse = {
+        icon: `${url}/public/bus.webp`,
+        title: "Suit",
+        description: `What is the suit of your fourth card?`,
+        label: "Suit",
+        links: {
+            actions: [
+                {
+                    href: `/3/suit?q=spades`,
+                    label: "♠"
+                },
+                {
+                    href: `/3/suit?q=diamonds`,
+                    label: "♦"
+                },
+                {
+                    href: `/3/suit?q=clubs`,
+                    label: "♣"
+                },
+                {
+                    href: `/3/suit?q=hearts`,
+                    label: "♥"
+                }
+            ]
+        }
+    }
+
+    return c.json(buttons);
+})
+
+app.post("/1/suit", async (c) => {
+    const { account } = await c.req.json();
+    const accountKey = new PublicKey(account);
+    try {
+        const user = await prisma.player.findFirst({ where: { wallet: account } });
+        if (!user) { throw new Error("You never registered!") }
+        const pendingBonkBalance = await prisma.confirmingTransactions.findFirst({ where: { wallet: account } })
+        if (pendingBonkBalance!.pendingBonk > 0) {
+            throw new Error("You have unconfirmed bonk balance left to pay!")
+        }
+
+        const playerPhase3 = await prisma.phase1.findFirst({ where: { wallet: account } });
+        if (!playerPhase3 || playerPhase3.card3value == 0) {
+            throw new Error("Please play Inside/Outside before you play Suit")
+        }
+
+        if (playerPhase3.card4value != 0) {
+            throw new Error(`You've already played this. Your card was ${playerPhase3.card4display}`)
+        }
+
+        const playerDeck: Card[] = JSON.parse(user.deck);
+        const choice = c.req.query("q") as "spades" | "diamonds" | "clubs" | "hearts";
+        const card4 = playerDeck.pop();
+        await prisma.phase1.update({
+            where: { wallet: account },
+            data: {
+                card4display: card4?.display,
+                card4suit: card4?.suit,
+                card4value: card4?.value
+            }
+        });
+
+        if (
+            (choice == "spades" && card4?.suit == "Spades") ||
+            (choice == "clubs" && card4?.suit == "Clubs") ||
+            (choice == "hearts" && card4?.suit == "Hearts") ||
+            (choice == "diamonds" && card4?.suit == "Diamonds")
+        ) {
+            await prisma.player.update({
+                where: { wallet: account },
+                data: {
+                    points: {
+                        increment: 1
+                    },
+                    deck: JSON.stringify(playerDeck)
+                }
+            })
+            throw new Error(`Your card was ${card4!.display}. You get 1 point. Congrats, you're no longer a loser!`);
+        } else {
+            await prisma.phase3.delete({ where: { wallet: account } });
+            if (playerDeck.length < 4) {
+                throw new Error(`Your card was ${card4!.display}. You have less than four cards left. No more attempts can be made.`)
+            } else {
+                throw new Error(`Your card was ${card4!.display}. You can restart the attempt`)
+            }
+        }
+    } catch (e: any) {
+        const error: ActionError = { message: e.message }
+        return c.json(error, 400);
+    }
+})
 
 /** Phase 3 */
 
