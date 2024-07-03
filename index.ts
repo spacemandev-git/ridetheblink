@@ -464,7 +464,7 @@ app.post("/1/insideoutside", async (c) => {
                         deck: JSON.stringify(playerDeck)
                     }
                 })
-                const message = `Your 2nd card was ${playerPhase1.card2display}. You chose ${choice}. Your 3rd card was ${card3!.display}. You get 1 point. Move to Card 4`;
+                const message = `Your 1st card was ${playerPhase1.card1display}, your 2nd card was ${playerPhase1.card2display}. You chose ${choice}. Your 3rd card was ${card3!.display}. You get 1 point. Move to Card 4`;
                 return c.json({ transaction: await createEmptyTransaction(account), message }, 200)
             } else if (choice == "outside" &&
                 (card3!.value < Math.min(playerPhase1.card1value, playerPhase1.card2value) ||
@@ -478,7 +478,7 @@ app.post("/1/insideoutside", async (c) => {
                         deck: JSON.stringify(playerDeck)
                     }
                 })
-                const message = `Your 2nd card was ${playerPhase1.card2display}. You chose ${choice}. Your 3rd card was ${card3!.display}. You get 1 point. Move to Card 4`;
+                const message = `Your 1st card was ${playerPhase1.card1display}, your 2nd card was ${playerPhase1.card2display}. You chose ${choice}. Your 3rd card was ${card3!.display}. You get 1 point. Move to Card 4`;
                 return c.json({ transaction: await createEmptyTransaction(account), message }, 200)
             } else {
                 await prisma.player.update({
@@ -490,7 +490,7 @@ app.post("/1/insideoutside", async (c) => {
                         deck: JSON.stringify(playerDeck)
                     }
                 })
-                throw new Error(`Your 2nd card was ${playerPhase1.card2display}. You chose ${choice}. Your 3rd card was ${card3!.display}. Move to Card 4`);
+                const message = `Your 1st card was ${playerPhase1.card1display}, your 2nd card was ${playerPhase1.card2display}. You chose ${choice}. Your 3rd card was ${card3!.display}. Move to Card 4`;
             }
         }
     } catch (e: any) {
@@ -1267,14 +1267,14 @@ app.post("/3/insideoutside", async (c) => {
                     where: { wallet: account },
                     data: { deck: JSON.stringify(playerDeck) }
                 })
-                const message = `Your 2nd card was ${playerPhase3.card2display} and 3rd card was ${card3!.display} and you chose ${choice}. Move to Card 4`;
+                const message = `Your 1st card was ${playerPhase3.card1display}, your 2nd card was ${playerPhase3.card2display} and 3rd card was ${card3!.display} and you chose ${choice}. Move to Card 4`;
                 return c.json({ transaction: await createEmptyTransaction(account), message }, 200);
             } else {
                 await prisma.phase3.delete({ where: { wallet: account } });
                 if (playerDeck.length < 4) {
-                    throw new Error(`Your 2nd card was ${playerPhase3.card2display} and 3rd card was ${card3!.display} and you chose ${choice}. You have less than four cards left. No more attempts can be made.`)
+                    throw new Error(`Your 1st card was ${playerPhase3.card1display}, your 2nd card was ${playerPhase3.card2display} and 3rd card was ${card3!.display} and you chose ${choice}. You have less than four cards left. No more attempts can be made.`)
                 } else {
-                    throw new Error(`Your 2nd card was ${playerPhase3.card2display} and 3rd card was ${card3!.display} and you chose ${choice}. You can restart the attempt`)
+                    throw new Error(`Your 1st card was ${playerPhase3.card1display}, your 2nd card was ${playerPhase3.card2display} and 3rd card was ${card3!.display} and you chose ${choice}. You can restart the attempt`)
                 }
             }
         }
