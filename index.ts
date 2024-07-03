@@ -87,7 +87,7 @@ app.post("/webhook", async (c) => {
  * Registers the wallet in our database for X bonk
  */
 const REGISTER_BONK_COST = 100
-app.get("/ridethebus/1/register", async (c) => {
+app.get("/1/register", async (c) => {
     let buttons: ActionGetResponse = {
         icon: `${url}/public/bus.webp`,
         title: "Ride the Bus",
@@ -98,7 +98,7 @@ app.get("/ridethebus/1/register", async (c) => {
     return c.json(buttons);
 })
 
-app.post("/ridethebus/1/register", async (c) => {
+app.post("/1/register", async (c) => {
     const { account } = await c.req.json();
     console.log(`Registering account ${account} in our database.`)
     try {
@@ -144,7 +144,7 @@ app.post("/ridethebus/1/register", async (c) => {
  * If they try to do it after already having done it, they are given an error
  */
 
-app.get("/ridethebus/1/redblack", async (c) => {
+app.get("/1/redblack", async (c) => {
     let buttons: ActionGetResponse = {
         icon: `${url}/public/bus.webp`,
         title: "Red / Black",
@@ -153,11 +153,11 @@ app.get("/ridethebus/1/redblack", async (c) => {
         links: {
             actions: [
                 {
-                    href: `/ridethebus/1/redblack?q=RED`,
+                    href: `/1/redblack?q=RED`,
                     label: "RED"
                 },
                 {
-                    href: `/ridethebus/1/redblack?q=BLACK`,
+                    href: `/1/redblack?q=BLACK`,
                     label: "BLACK"
                 }
             ]
@@ -167,7 +167,7 @@ app.get("/ridethebus/1/redblack", async (c) => {
     return c.json(buttons);
 })
 
-app.post("/ridethebus/1/redblack", async (c) => {
+app.post("/1/redblack", async (c) => {
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     try {
@@ -245,7 +245,7 @@ app.post("/ridethebus/1/redblack", async (c) => {
  * If they try to do it after already having done it, they are given an error
  */
 
-app.get("/ridethebus/1/highlow", async (c) => {
+app.get("/1/highlow", async (c) => {
     let buttons: ActionGetResponse = {
         icon: `${url}/public/bus.webp`,
         title: "High/ Low",
@@ -254,15 +254,15 @@ app.get("/ridethebus/1/highlow", async (c) => {
         links: {
             actions: [
                 {
-                    href: `/ridethebus/1/highlow?q=review`,
+                    href: `/1/highlow?q=review`,
                     label: "Review Card 1"
                 },
                 {
-                    href: `/ridethebus/1/highlow?q=higher`,
+                    href: `/1/highlow?q=higher`,
                     label: "HIGHER"
                 },
                 {
-                    href: `/ridethebus/1/highlow?q=lower`,
+                    href: `/1/highlow?q=lower`,
                     label: "LOWER"
                 }
             ]
@@ -272,7 +272,7 @@ app.get("/ridethebus/1/highlow", async (c) => {
     return c.json(buttons);
 })
 
-app.post("/ridethebus/1/highlow", async (c) => {
+app.post("/1/highlow", async (c) => {
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     try {
@@ -356,7 +356,7 @@ app.post("/ridethebus/1/highlow", async (c) => {
  * If they try to do it after they already have done it, it's disabled
  */
 
-app.get("/ridethebus/1/insideoutside", async (c) => {
+app.get("/1/insideoutside", async (c) => {
     let buttons: ActionGetResponse = {
         icon: `${url}/public/bus.webp`,
         title: "Inside / Outside",
@@ -365,15 +365,15 @@ app.get("/ridethebus/1/insideoutside", async (c) => {
         links: {
             actions: [
                 {
-                    href: `/ridethebus/1/insideoutside?q=review`,
+                    href: `/1/insideoutside?q=review`,
                     label: "Review Cards 1 & 2"
                 },
                 {
-                    href: `/ridethebus/1/insideoutside?q=inside`,
+                    href: `/1/insideoutside?q=inside`,
                     label: "INSIDE"
                 },
                 {
-                    href: `/ridethebus/1/insideoutside?q=outside`,
+                    href: `/1/insideoutside?q=outside`,
                     label: "OUTSIDE"
                 }
             ]
@@ -383,7 +383,7 @@ app.get("/ridethebus/1/insideoutside", async (c) => {
     return c.json(buttons);
 })
 
-app.post("/ridethebus/1/insideoutside", async (c) => {
+app.post("/1/insideoutside", async (c) => {
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     try {
@@ -468,7 +468,7 @@ app.post("/ridethebus/1/insideoutside", async (c) => {
  * Player picks what they think the suit of the next card is going to be.
  * If they have already done this, they are given an error
  */
-app.get("/ridethebus/1/suit", async (c) => {
+app.get("/1/suit", async (c) => {
     let buttons: ActionGetResponse = {
         icon: `${url}/public/bus.webp`,
         title: "Suit",
@@ -477,19 +477,19 @@ app.get("/ridethebus/1/suit", async (c) => {
         links: {
             actions: [
                 {
-                    href: `/ridethebus/1/suit?q=spades`,
+                    href: `/1/suit?q=spades`,
                     label: "♠"
                 },
                 {
-                    href: `/ridethebus/1/suit?q=diamonds`,
+                    href: `/1/suit?q=diamonds`,
                     label: "♦"
                 },
                 {
-                    href: `/ridethebus/1/suit?q=clubs`,
+                    href: `/1/suit?q=clubs`,
                     label: "♣"
                 },
                 {
-                    href: `/ridethebus/1/suit?q=hearts`,
+                    href: `/1/suit?q=hearts`,
                     label: "♥"
                 }
             ]
@@ -499,7 +499,7 @@ app.get("/ridethebus/1/suit", async (c) => {
     return c.json(buttons);
 })
 
-app.post("/ridethebus/1/suit", async (c) => {
+app.post("/1/suit", async (c) => {
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     try {
@@ -571,7 +571,7 @@ app.post("/ridethebus/1/suit", async (c) => {
  * Option to review their hand and how many points they have left
  */
 
-app.get("/ridethebus/1/review", async (c) => {
+app.get("/1/review", async (c) => {
     let buttons: ActionGetResponse = {
         icon: `${url}/public/bus.webp`,
         title: "Phase 1 Review",
@@ -582,7 +582,7 @@ app.get("/ridethebus/1/review", async (c) => {
     return c.json(buttons);
 })
 
-app.post("/ridethebus/1/review", async (c) => {
+app.post("/1/review", async (c) => {
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     try {
@@ -616,7 +616,7 @@ app.post("/ridethebus/1/review", async (c) => {
  * If they guess within 10% of the actual value they get 1 point, 2 points for 5%, 3 points for 1 %
  */
 
-app.get("/ridethebus/2/:card", async (c) => {
+app.get("/2/:card", async (c) => {
     try {
         const cardNum = c.req.param("card") as string;
         let totalPlayers = 0;
@@ -646,11 +646,11 @@ app.get("/ridethebus/2/:card", async (c) => {
             links: {
                 actions: [
                     {
-                        href: `/ridethebus/2/review/${cardNum}`,
+                        href: `/2/review/${cardNum}`,
                         label: `Review Phase 1 Card ${cardNum}`
                     },
                     {
-                        href: `/ridethebus/2/guess/${cardNum}?q={guess}`,
+                        href: `/2/guess/${cardNum}?q={guess}`,
                         label: `Guess`,
                         parameters: [{ name: "guess" }]
                     }
@@ -666,7 +666,7 @@ app.get("/ridethebus/2/:card", async (c) => {
 
 })
 
-app.post("/ridethebus/2/review/:card", async (c) => {
+app.post("/2/:card/review", async (c) => {
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     try {
@@ -703,7 +703,7 @@ app.post("/ridethebus/2/review/:card", async (c) => {
     }
 })
 
-app.post("/ridethebus/2/guess/:card", async (c) => {
+app.post("/2/:card/guess", async (c) => {
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     const cardNum = c.req.param("card") as string;
@@ -834,7 +834,7 @@ app.post("/ridethebus/2/guess/:card", async (c) => {
  * Phase 2: Review 
  * They can see how many points they have 
  */
-app.get("/ridethebus/2/review", async (c) => {
+app.get("/2/review", async (c) => {
     let buttons: ActionGetResponse = {
         icon: `${url}/public/bus.webp`,
         title: "Phase 2 Review",
@@ -845,12 +845,12 @@ app.get("/ridethebus/2/review", async (c) => {
     return c.json(buttons);
 })
 
-app.post("/ridethebus/2/review", async (c) => {
+app.post("/2/review", async (c) => {
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     try {
         const user = await prisma.player.findFirst({ where: { wallet: account } });
-        if (!user) { throw new Error("You have to register first!") }
+        if (!user) { throw new Error("You never registered!") }
 
         throw new Error(`You currently have ${user.points} points.`)
     } catch (e: any) {
@@ -858,7 +858,6 @@ app.post("/ridethebus/2/review", async (c) => {
         return c.json(error, 400);
     }
 })
-
 
 /** Phase 2 */
 
@@ -870,6 +869,49 @@ app.post("/ridethebus/2/review", async (c) => {
  * If they are loser, they can spend bonk to play ride-the-bus over and over again
  * They must guess ALL FOUR right to get their original investment back + the new bonk they've contributed
  */
+
+app.get('/3/review', async (c) => {
+    let buttons: ActionGetResponse = {
+        icon: `${url}/public/bus.webp`,
+        title: "Phase 3 Review",
+        description: `Review how many points you have, and if you're currently a WINNER (get a portion of the winning pot), AVERAGE (get 70% of BONK back), or LOSER (get no BONK back). If you're a loser you can play Ride the Bus again and if you get all four right, you'll get a point. You can play until your deck runs out of cards or you run out of BONK`,
+        label: "Review",
+    }
+
+    return c.json(buttons);
+})
+
+app.post("/3/review", async (c) => {
+    const { account } = await c.req.json();
+    const accountKey = new PublicKey(account);
+    try {
+        const user = await prisma.player.findFirst({ where: { wallet: account } });
+        if (!user) { throw new Error("You never registered!") }
+        const highestPointTotal = (await prisma.player.findMany({
+            orderBy: {
+                points: "desc"
+            },
+            take: 1
+        }))[0].points;
+        const winningPlayers = await prisma.player.count({ where: { points: { equals: highestPointTotal } } })
+        const lowestPointTotal = (await prisma.player.findMany({
+            orderBy: {
+                points: "asc"
+            },
+            take: 1
+        }))[0].points;
+
+        if (user.points == highestPointTotal) {
+            throw new Error(`You are currently in the winning pool, there's ${winningPlayers} total winning players.`)
+        } else if (user.points == lowestPointTotal) {
+            throw new Error(`You are currently in the losing pool.`)
+        }
+
+    } catch (e: any) {
+        const error: ActionError = { message: e.message }
+        return c.json(error, 400);
+    }
+})
 
 /**
  * Phase 3: Red/Black

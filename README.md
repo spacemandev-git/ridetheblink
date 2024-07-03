@@ -1,15 +1,20 @@
-# ride-the-bus
+# Ride the Blink
 
-To install dependencies:
+## Phase 1
 
-```bash
-bun install
-```
+`/1/register`  
+`/1/redblack`  
+`/1/highlow`  
+`/1/insideoutside`  
+`/1/suit`  
+`/1/review`  
 
-To run:
+## Phase 2
 
-```bash
-bun run index.ts
-```
+`/2/:card`  
+`/2/:card/review`  
+`/2/:card/guess`  
+`/2/review`  
 
-This project was created using `bun init` in bun v1.1.16. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+## Phase 3
+
