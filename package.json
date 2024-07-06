@@ -15,6 +15,7 @@
     "@solana/spl-token": "^0.4.7",
     "@solana/web3.js": "^1.93.4",
     "@types/knuth-shuffle-seeded": "^1.0.2",
+    "bs58": "^6.0.0",
     "dotenv": "^16.4.5",
     "hono": "^4.4.9",
     "knuth-shuffle-seeded": "^1.0.6",

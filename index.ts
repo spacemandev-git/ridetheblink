@@ -13,7 +13,7 @@ import type { WebhookEvent } from "./webhook-interface";
 const prisma = new PrismaClient();
 
 const phase: number = parseInt(process.env.PHASE as string) || 0;
-
+console.log(`Phase: ${phase}`);
 interface Card {
     value: number,
     suit: "Hearts" | "Diamonds" | "Clubs" | "Spades",
@@ -22,11 +22,11 @@ interface Card {
 const url = "https://ridetheblink.blinkgames.dev";
 const connection = new Connection(clusterApiUrl("mainnet-beta"), "confirmed");
 
-const bonkMint = new PublicKey("DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263");
-const bonkDecimals = 5;
+export const bonkMint = new PublicKey("DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263");
+export const bonkDecimals = 5;
 
-const serverKey = new PublicKey("2qPRnmigG7KBwnR26djXHdPuYBzBvYEsbZBeoNVeWzqr");
-const serverBonkATA = getAssociatedTokenAddressSync(bonkMint, serverKey);
+export const serverKey = new PublicKey("2qPRnmigG7KBwnR26djXHdPuYBzBvYEsbZBeoNVeWzqr");
+export const serverBonkATA = getAssociatedTokenAddressSync(bonkMint, serverKey);
 
 const deck: Card[] = JSON.parse(readFileSync("./deck.json").toString());
 const app = new Hono();
