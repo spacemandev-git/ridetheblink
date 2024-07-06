@@ -110,12 +110,12 @@ async function createEmptyTransaction(account: string): Promise<string> {
 /**
  * Registers the wallet in our database for X bonk
  */
-const REGISTER_BONK_COST = 500 * (1e5);
+const REGISTER_BONK_COST = 500_000;
 app.get("/1/register", async (c) => {
     let buttons: ActionGetResponse = {
         icon: `${url}/public/bus.webp`,
         title: "Ride the Bus",
-        description: `Register to Ride the Bus for ${REGISTER_BONK_COST / (1e5)} BONK. Rules at ${url}`,
+        description: `Register to Ride the Bus for ${REGISTER_BONK_COST} BONK. Rules at ${url}`,
         label: "Register!",
         disabled: phase == 1 ? false : true
     }
@@ -136,7 +136,7 @@ app.post("/1/register", async (c) => {
         const accountKey = new PublicKey(account);
         const sourceBonkATA = getAssociatedTokenAddressSync(bonkMint, accountKey);
 
-        const ix = createTransferCheckedInstruction(sourceBonkATA, bonkMint, serverBonkATA, accountKey, REGISTER_BONK_COST, bonkDecimals);
+        const ix = createTransferCheckedInstruction(sourceBonkATA, bonkMint, serverBonkATA, accountKey, REGISTER_BONK_COST * 1e5, bonkDecimals);
         const msg = new TransactionMessage({
             payerKey: accountKey,
             recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
@@ -159,7 +159,7 @@ app.post("/1/register", async (c) => {
         await prisma.confirmingTransactions.create({
             data: {
                 wallet: account,
-                pendingBonk: REGISTER_BONK_COST / (1e5)
+                pendingBonk: REGISTER_BONK_COST
             }
         })
 
@@ -986,12 +986,12 @@ app.post("/3/review", async (c) => {
 /**
  * Phase 3: Start Attempt
  */
-const PHASE3_ATTEMPT_COST = 50 * (1e5);
+const PHASE3_ATTEMPT_COST = 50_000;
 app.get("/3/start", async (c) => {
     let buttons: ActionGetResponse = {
         icon: `${url}/public/bus.webp`,
         title: "Ride the Bus",
-        description: `If you're in the LOSING pool, click on the button to start an attempt for ${PHASE3_ATTEMPT_COST / (1e5)} BONK. Can play until your deck of cards runs out or you're out of BONK`,
+        description: `If you're in the LOSING pool, click on the button to start an attempt for ${PHASE3_ATTEMPT_COST} BONK. Can play until your deck of cards runs out or you're out of BONK`,
         label: "Start Attempt!",
         disabled: phase == 3 ? false : true
     }
@@ -1026,7 +1026,7 @@ app.post("/3/start", async (c) => {
         const accountKey = new PublicKey(account);
         const sourceBonkATA = getAssociatedTokenAddressSync(bonkMint, accountKey);
 
-        const ix = createTransferCheckedInstruction(sourceBonkATA, bonkMint, serverBonkATA, accountKey, PHASE3_ATTEMPT_COST, bonkDecimals);
+        const ix = createTransferCheckedInstruction(sourceBonkATA, bonkMint, serverBonkATA, accountKey, PHASE3_ATTEMPT_COST * (1e5), bonkDecimals);
         const msg = new TransactionMessage({
             payerKey: accountKey,
             recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
@@ -1041,7 +1041,7 @@ app.post("/3/start", async (c) => {
         await prisma.confirmingTransactions.update({
             where: { wallet: account },
             data: {
-                pendingBonk: PHASE3_ATTEMPT_COST / (1e5)
+                pendingBonk: PHASE3_ATTEMPT_COST
             }
         })
 
