@@ -1195,7 +1195,7 @@ app.post("/3/highlow", async (c) => {
             throw new Error(`Your first card was ${playerPhase3.card1display}`);
         } else {
             const card2 = playerDeck.pop();
-            await prisma.phase1.update({
+            await prisma.phase3.update({
                 where: { wallet: account },
                 data: {
                     card2display: card2?.display,
@@ -1284,7 +1284,7 @@ app.post("/3/insideoutside", async (c) => {
             throw new Error(`Your cards are: ${playerPhase3.card1display} and ${playerPhase3.card2display}`);
         } else {
             const card3 = playerDeck.pop();
-            await prisma.phase1.update({
+            await prisma.phase3.update({
                 where: { wallet: account },
                 data: {
                     card3display: card3?.display,
