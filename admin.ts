@@ -12,9 +12,6 @@ const connection = new Connection(process.env.RPC_URL as string, "confirmed");
 gameinfo();
 deliverBonk();
 
-
-
-
 async function gameinfo() {
     const winningScore = (await prisma.player.findMany({
         orderBy: {
