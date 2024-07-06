@@ -3,13 +3,17 @@ import { createTransferCheckedInstruction, getAssociatedTokenAddressSync } from 
 import { Connection, Keypair, PublicKey, Transaction, TransactionMessage, VersionedMessage, VersionedTransaction, type TransactionInstruction } from "@solana/web3.js";
 const prisma = new PrismaClient();
 import bs58 from 'bs58';
-import { bonkDecimals, bonkMint, serverBonkATA, serverKey } from ".";
+
+const bonkMint = new PublicKey("DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263");
+const bonkDecimals = 5;
+
+const serverKey = new PublicKey("2qPRnmigG7KBwnR26djXHdPuYBzBvYEsbZBeoNVeWzqr");
+const serverBonkATA = getAssociatedTokenAddressSync(bonkMint, serverKey);
 
 const serverPrivateKey = Keypair.fromSecretKey(bs58.decode(process.env.SERVER_PRIVATE_KEY as string));
 const connection = new Connection(process.env.RPC_URL as string, "confirmed");
 
 
-gameinfo();
 deliverBonk();
 
 async function gameinfo() {
@@ -74,10 +78,10 @@ async function deliverBonk(dryrun: boolean = true) {
 
     // Average players get 70% of BONK back
     for (let averagePlayer of averagePlayers) {
-        const amtToReturn = Math.floor(averagePlayer.bonk * 0.7) * 1e5;
+        const amtToReturn = Math.floor(averagePlayer.bonk * 0.7);
         totalPool += (amtToReturn - averagePlayer.bonk);
         const playerATA = getAssociatedTokenAddressSync(bonkMint, new PublicKey(averagePlayer.wallet));
-        const ix = createTransferCheckedInstruction(serverBonkATA, bonkMint, playerATA, serverPrivateKey.publicKey, amtToReturn, bonkDecimals)
+        const ix = createTransferCheckedInstruction(serverBonkATA, bonkMint, playerATA, serverPrivateKey.publicKey, amtToReturn * 1e5, bonkDecimals)
         ixArray.push(ix)
     }
     // Losers get 0 BONK back
@@ -87,15 +91,20 @@ async function deliverBonk(dryrun: boolean = true) {
 
     // AdminFee = 10% of PrizePool
     const adminFee = Math.floor(totalPool * 0.1);
+    console.log(`AdminFee: ${adminFee} Bonk!`);
+
     // WinnersPool = PrizePool - AdminFee
     const winnersPool = totalPool - adminFee;
+    console.log(`WinnersPool: ${winnersPool} Bonk!`);
 
     // Winners get 100% of BONK back + (WinnersPool / # number of winners)
     const winningDistribution = Math.floor(winnersPool / winningPlayers.length);
+    console.log(`WinningDistribution: ${winningDistribution} Bonk!`);
+
     for (let winningPlayer of winningPlayers) {
-        const amtToReturn = winningPlayer.bonk + winningDistribution;
+        const amtToReturn = (winningPlayer.bonk + winningDistribution);
         const playerATA = getAssociatedTokenAddressSync(bonkMint, new PublicKey(winningPlayer.wallet));
-        const ix = createTransferCheckedInstruction(serverBonkATA, bonkMint, playerATA, serverPrivateKey.publicKey, amtToReturn, bonkDecimals)
+        const ix = createTransferCheckedInstruction(serverBonkATA, bonkMint, playerATA, serverPrivateKey.publicKey, amtToReturn * 1e5, bonkDecimals)
         ixArray.push(ix)
     }
 
@@ -108,6 +117,7 @@ async function deliverBonk(dryrun: boolean = true) {
                 ...ixGroup
             ],
         }).compileToV0Message());
+        tx.sign([serverPrivateKey])
         if (!dryrun) {
             const signature = await connection.sendRawTransaction(tx.serialize());
             console.log(`Delivered bonk to ${ixGroup.length} players. Signature: ${signature}`);

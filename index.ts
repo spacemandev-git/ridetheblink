@@ -22,11 +22,11 @@ interface Card {
 const url = "https://ridetheblink.blinkgames.dev";
 const connection = new Connection(clusterApiUrl("mainnet-beta"), "confirmed");
 
-export const bonkMint = new PublicKey("DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263");
-export const bonkDecimals = 5;
+const bonkMint = new PublicKey("DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263");
+const bonkDecimals = 5;
 
-export const serverKey = new PublicKey("2qPRnmigG7KBwnR26djXHdPuYBzBvYEsbZBeoNVeWzqr");
-export const serverBonkATA = getAssociatedTokenAddressSync(bonkMint, serverKey);
+const serverKey = new PublicKey("2qPRnmigG7KBwnR26djXHdPuYBzBvYEsbZBeoNVeWzqr");
+const serverBonkATA = getAssociatedTokenAddressSync(bonkMint, serverKey);
 
 const deck: Card[] = JSON.parse(readFileSync("./deck.json").toString());
 const app = new Hono();
@@ -1418,6 +1418,15 @@ app.post("/3/suit", async (c) => {
                         increment: 1
                     },
                     deck: JSON.stringify(playerDeck)
+                }
+            })
+
+            await prisma.phase3.update({
+                where: { wallet: account },
+                data: {
+                    card4value: card4!.value,
+                    card4suit: card4!.suit,
+                    card4display: card4!.display
                 }
             })
             const message = `Your card was ${card4!.display} and you chose ${choice}. You get 1 point. Congrats, you're no longer a loser!`;
