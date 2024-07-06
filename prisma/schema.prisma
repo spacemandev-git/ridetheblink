@@ -25,6 +25,10 @@ model ConfirmingTransactions {
   pendingBonk Int
 }
 
+model ConfirmedTransactions {
+  id String @id
+}
+
 model Phase1 {
   wallet       String @id
   card1value   Int    @default(0)

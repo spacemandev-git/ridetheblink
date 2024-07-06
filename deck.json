@@ -1,10 +1,5 @@
 [
     {
-        "value": 1,
-        "suit": "Hearts",
-        "display": "1 of Hearts"
-    },
-    {
         "value": 2,
         "suit": "Hearts",
         "display": "2 of Hearts"
@@ -68,11 +63,6 @@
         "value": 14,
         "suit": "Hearts",
         "display": "Ace of Hearts"
-    },
-    {
-        "value": 1,
-        "suit": "Spades",
-        "display": "1 of Spades"
     },
     {
         "value": 2,
@@ -140,11 +130,6 @@
         "display": "Ace of Spades"
     },
     {
-        "value": 1,
-        "suit": "Clubs",
-        "display": "1 of Clubs"
-    },
-    {
         "value": 2,
         "suit": "Clubs",
         "display": "2 of Clubs"
@@ -208,11 +193,6 @@
         "value": 14,
         "suit": "Clubs",
         "display": "Ace of Clubs"
-    },
-    {
-        "value": 1,
-        "suit": "Diamonds",
-        "display": "1 of Diamonds"
     },
     {
         "value": 2,

@@ -51,7 +51,8 @@ app.post("/webhook", async (c) => {
 
     const events: WebhookEvent[] = await c.req.json();
     for (let event of events) {
-        if (event.type == "TRANSFER") {
+        const confirmedTransaction = await prisma.confirmedTransactions.findFirst({ where: { id: event.signature } });
+        if (event.type == "TRANSFER" && !confirmedTransaction) {
             for (let tokenTransfer of event.tokenTransfers) {
                 if (
                     tokenTransfer.mint == bonkMint.toString() &&
@@ -69,6 +70,13 @@ app.post("/webhook", async (c) => {
                             }
                         }
                     })
+
+                    await prisma.confirmedTransactions.create({
+                        data: {
+                            id: event.signature
+                        }
+                    })
+
                     await prisma.player.update({
                         where: { wallet: sender },
                         data: {
@@ -259,7 +267,7 @@ app.post("/1/redblack", async (c) => {
                     deck: JSON.stringify(playerDeck)
                 }
             })
-            throw new Error(`Your card was ${card1.display}and you choice ${choice}. Move to Card 2`);
+            throw new Error(`Your card was ${card1.display} and you choice ${choice}. Move to Card 2`);
         }
     } catch (e: any) {
         const error: ActionError = { message: e.message }
