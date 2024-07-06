@@ -971,7 +971,7 @@ app.post("/3/review", async (c) => {
 
         if (user.points == highestPointTotal) {
             throw new Error(`You are currently in the WINNING pool, there's ${winningPlayers} total winning players.`)
-        } else if (user.points == lowestPointTotal) {
+        } else if (user.points == lowestPointTotal || user.points == 0) {
             throw new Error(`You are currently in the LOSING pool.`)
         } else if (user.points > 0) {
             throw new Error(`You are in the AVERAGE pool.`)
