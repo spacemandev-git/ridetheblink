@@ -700,11 +700,11 @@ app.get("/2/:card", async (c) => {
             links: {
                 actions: [
                     {
-                        href: `/2/review/${cardNum}`,
+                        href: `/2/${cardNum}/review`,
                         label: `Review Phase 1 Card ${cardNum}`
                     },
                     {
-                        href: `/2/guess/${cardNum}?q={guess}`,
+                        href: `/2/${cardNum}/guess?q={guess}`,
                         label: `Guess`,
                         parameters: [{ name: "guess" }]
                     }
