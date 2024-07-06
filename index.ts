@@ -664,6 +664,38 @@ app.post("/1/review", async (c) => {
 /** Phase 2 */
 
 /**
+ * Phase 2: Review 
+ * They can see how many points they have 
+ */
+app.get("/2/final/review", async (c) => {
+    let buttons: ActionGetResponse = {
+        icon: `${url}/public/bus.webp`,
+        title: "Phase 2 Review",
+        description: `Review how many points you have`,
+        label: "Review",
+        disabled: phase == 2 ? false : true
+    }
+
+    return c.json(buttons, 200);
+})
+
+app.post("/2/final/review", async (c) => {
+    if (phase != 2) { return c.json({ error: "Game not on phase 2!" }, 403); }
+
+    const { account } = await c.req.json();
+    const accountKey = new PublicKey(account);
+    try {
+        const user = await prisma.player.findFirst({ where: { wallet: account } });
+        if (!user) { throw new Error("You never registered!") }
+
+        throw new Error(`You currently have ${user.points} points.`)
+    } catch (e: any) {
+        const error: ActionError = { message: e.message }
+        return c.json(error, 400);
+    }
+})
+
+/**
  * Phase 2: Card 1-4
  * They can review their Card 1-4 and are given how many total players there are with Card 1-4's in the game.
  * They must guess how many players have the same value card as them. 
@@ -886,38 +918,6 @@ app.post("/2/:card/guess", async (c) => {
             const message = `You guessed within 1%. You get 5 point`;
             return c.json({ transaction: await createEmptyTransaction(account), message }, 200);
         }
-    } catch (e: any) {
-        const error: ActionError = { message: e.message }
-        return c.json(error, 400);
-    }
-})
-
-/**
- * Phase 2: Review 
- * They can see how many points they have 
- */
-app.get("/2/final/review", async (c) => {
-    let buttons: ActionGetResponse = {
-        icon: `${url}/public/bus.webp`,
-        title: "Phase 2 Review",
-        description: `Review how many points you have`,
-        label: "Review",
-        disabled: phase == 2 ? false : true
-    }
-
-    return c.json(buttons, 200);
-})
-
-app.post("/2/final/review", async (c) => {
-    if (phase != 2) { return c.json({ error: "Game not on phase 2!" }, 403); }
-
-    const { account } = await c.req.json();
-    const accountKey = new PublicKey(account);
-    try {
-        const user = await prisma.player.findFirst({ where: { wallet: account } });
-        if (!user) { throw new Error("You never registered!") }
-
-        throw new Error(`You currently have ${user.points} points.`)
     } catch (e: any) {
         const error: ActionError = { message: e.message }
         return c.json(error, 400);
