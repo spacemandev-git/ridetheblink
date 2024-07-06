@@ -33,7 +33,7 @@ const app = new Hono();
 
 app.use('/', async (c) => c.redirect("https://spacemandev.notion.site/Ride-the-Bus-b38a245fcfe84b98b0470ca7dbaf97a0?pvs=25"))
 app.use('*', cors({
-    origin: ['*'], //TODO: Restrict to x.com or twitter.com
+    origin: ['*'],
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization', "Accept-Encoding"],
     exposeHeaders: ['Content-Type', 'Authorization'],
@@ -99,24 +99,24 @@ async function createEmptyTransaction(account: string): Promise<string> {
 
 app.use("/", async (c, next) => {
     if (phase == 0) {
-        return c.status(404);
+        return c.json({ error: "Game not started!" }, 403);
     } else if (phase == 1) {
-        if (c.req.path.startsWith("/1")) {
+        if (c.req.path.includes("/1")) {
             return next();
         } else {
-            return c.status(404);
+            return c.status(403);
         }
     } else if (phase == 2) {
-        if (c.req.path.startsWith("/2")) {
+        if (c.req.path.includes("/2")) {
             return next();
         } else {
-            return c.status(404);
+            return c.status(403);
         }
     } else if (phase == 3) {
-        if (c.req.path.startsWith("/3")) {
+        if (c.req.path.includes("/3")) {
             return next();
         } else {
-            return c.status(404);
+            return c.status(403);
         }
     }
 })
