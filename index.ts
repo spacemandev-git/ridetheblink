@@ -1045,6 +1045,12 @@ app.post("/3/start", async (c) => {
             }
         })
 
+        await prisma.phase3.create({
+            data: {
+                wallet: account,
+            }
+        });
+
         return c.json(response, 200)
     } catch (e: any) {
         const error: ActionError = {
