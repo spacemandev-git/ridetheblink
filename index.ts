@@ -695,7 +695,7 @@ app.get("/2/:card", async (c) => {
         let buttons: ActionGetResponse = {
             icon: `${url}/public/bus.webp`,
             title: `Phase 2; Card ${cardNum}`,
-            description: `${totalPlayers} have a card ${cardNum}. How many of them picked the same *value* as you? Suit doesn't matter? 1pt for guessing within 10%, 3pts for 5%, and 5pts for 1%.`,
+            description: `${totalPlayers} total playershave a card ${cardNum}. How many of them picked the same *value* as you? Suit doesn't matter? 1pt for guessing within 10%, 3pts for 5%, and 5pts for 1%.`,
             label: "Phase 2",
             links: {
                 actions: [
@@ -896,7 +896,7 @@ app.post("/2/:card/guess", async (c) => {
  * Phase 2: Review 
  * They can see how many points they have 
  */
-app.get("/2/review", async (c) => {
+app.get("/2/final/review", async (c) => {
     let buttons: ActionGetResponse = {
         icon: `${url}/public/bus.webp`,
         title: "Phase 2 Review",
@@ -905,10 +905,10 @@ app.get("/2/review", async (c) => {
         disabled: phase == 2 ? false : true
     }
 
-    return c.json(buttons);
+    return c.json(buttons, 200);
 })
 
-app.post("/2/review", async (c) => {
+app.post("/2/final/review", async (c) => {
     if (phase != 2) { return c.json({ error: "Game not on phase 2!" }, 403); }
 
     const { account } = await c.req.json();
