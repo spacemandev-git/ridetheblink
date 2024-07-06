@@ -20,7 +20,7 @@ interface Card {
     display: string,
 }
 const url = "https://ridetheblink.blinkgames.dev";
-const connection = new Connection(clusterApiUrl("mainnet-beta"), "confirmed");
+const connection = new Connection(process.env.RPC_URL as string, "confirmed");
 
 const bonkMint = new PublicKey("DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263");
 const bonkDecimals = 5;
