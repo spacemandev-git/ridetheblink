@@ -97,29 +97,6 @@ async function createEmptyTransaction(account: string): Promise<string> {
     return Buffer.from(txn.serialize()).toString("base64");
 }
 
-app.use("/", async (c, next) => {
-    if (phase == 0) {
-        return c.json({ error: "Game not started!" }, 403);
-    } else if (phase == 1) {
-        if (c.req.path.includes("/1")) {
-            return next();
-        } else {
-            return c.status(403);
-        }
-    } else if (phase == 2) {
-        if (c.req.path.includes("/2")) {
-            return next();
-        } else {
-            return c.status(403);
-        }
-    } else if (phase == 3) {
-        if (c.req.path.includes("/3")) {
-            return next();
-        } else {
-            return c.status(403);
-        }
-    }
-})
 /** Phase 1 */
 
 /**
@@ -131,13 +108,15 @@ app.get("/1/register", async (c) => {
         icon: `${url}/public/bus.webp`,
         title: "Ride the Bus",
         description: `Register to Ride the Bus for ${REGISTER_BONK_COST / (1e5)} BONK. Rules at ${url}`,
-        label: "Register!"
+        label: "Register!",
+        disabled: phase == 1 ? false : true
     }
 
     return c.json(buttons);
 })
 
 app.post("/1/register", async (c) => {
+    if (phase != 1) { return c.json({ error: "Not on phase 1!" }, 403); }
     const { account } = await c.req.json();
     console.log(`Registering account ${account} in our database.`)
     try {
@@ -190,7 +169,6 @@ app.post("/1/register", async (c) => {
  * Player picks either Red/Black, and gets a point if they win
  * If they try to do it after already having done it, they are given an error
  */
-
 app.get("/1/redblack", async (c) => {
     let buttons: ActionGetResponse = {
         icon: `${url}/public/bus.webp`,
@@ -208,13 +186,16 @@ app.get("/1/redblack", async (c) => {
                     label: "BLACK"
                 }
             ]
-        }
+        },
+        disabled: phase == 1 ? false : true
     }
 
     return c.json(buttons);
 })
 
 app.post("/1/redblack", async (c) => {
+    if (phase != 1) { return c.json({ error: "Game not on phase 1!" }, 403); }
+
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     try {
@@ -315,13 +296,16 @@ app.get("/1/highlow", async (c) => {
                     label: "LOWER"
                 }
             ]
-        }
+        },
+        disabled: phase == 1 ? false : true
     }
 
     return c.json(buttons);
 })
 
 app.post("/1/highlow", async (c) => {
+    if (phase != 1) { return c.json({ error: "Game not on phase 1!" }, 403); }
+
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     try {
@@ -428,13 +412,16 @@ app.get("/1/insideoutside", async (c) => {
                     label: "OUTSIDE"
                 }
             ]
-        }
+        },
+        disabled: phase == 1 ? false : true
     }
 
     return c.json(buttons);
 })
 
 app.post("/1/insideoutside", async (c) => {
+    if (phase != 1) { return c.json({ error: "Game not on phase 1!" }, 403); }
+
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     try {
@@ -546,13 +533,16 @@ app.get("/1/suit", async (c) => {
                     label: "♥"
                 }
             ]
-        }
+        },
+        disabled: phase == 1 ? false : true
     }
 
     return c.json(buttons);
 })
 
 app.post("/1/suit", async (c) => {
+    if (phase != 1) { return c.json({ error: "Game not on phase 1!" }, 403); }
+
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     try {
@@ -631,12 +621,14 @@ app.get("/1/review", async (c) => {
         title: "Phase 1 Review",
         description: `Review your four cards`,
         label: "Review",
+        disabled: phase == 1 ? false : true
     }
 
     return c.json(buttons);
 })
 
 app.post("/1/review", async (c) => {
+    if (phase != 1) { return c.json({ error: "Game not on phase 1!" }, 403); }
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     try {
@@ -709,7 +701,8 @@ app.get("/2/:card", async (c) => {
                         parameters: [{ name: "guess" }]
                     }
                 ]
-            }
+            },
+            disabled: phase == 2 ? false : true
         }
 
         return c.json(buttons);
@@ -721,6 +714,8 @@ app.get("/2/:card", async (c) => {
 })
 
 app.post("/2/:card/review", async (c) => {
+    if (phase != 2) { return c.json({ error: "Game not on phase 2!" }, 403); }
+
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     try {
@@ -758,6 +753,8 @@ app.post("/2/:card/review", async (c) => {
 })
 
 app.post("/2/:card/guess", async (c) => {
+    if (phase != 2) { return c.json({ error: "Game not on phase 2!" }, 403); }
+
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     const cardNum = c.req.param("card") as string;
@@ -897,12 +894,15 @@ app.get("/2/review", async (c) => {
         title: "Phase 2 Review",
         description: `Review how many points you have`,
         label: "Review",
+        disabled: phase == 2 ? false : true
     }
 
     return c.json(buttons);
 })
 
 app.post("/2/review", async (c) => {
+    if (phase != 2) { return c.json({ error: "Game not on phase 2!" }, 403); }
+
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     try {
@@ -933,12 +933,15 @@ app.get('/3/review', async (c) => {
         title: "Phase 3 Review",
         description: `Review how many points you have, and if you're currently a WINNER (get a portion of the winning pot), AVERAGE (get 70% of BONK back), or LOSER (get no BONK back). If you're a loser you can play Ride the Bus again and if you get all four right, you'll get a point. You can play until your deck runs out of cards or you run out of BONK`,
         label: "Review",
+        disabled: phase == 3 ? false : true
     }
 
     return c.json(buttons);
 })
 
 app.post("/3/review", async (c) => {
+    if (phase != 3) { return c.json({ error: "Game not on phase 3!" }, 403); }
+
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     try {
@@ -981,13 +984,16 @@ app.get("/3/start", async (c) => {
         icon: `${url}/public/bus.webp`,
         title: "Ride the Bus",
         description: `If you're in the LOSING pool, click on the button to start an attempt for ${PHASE3_ATTEMPT_COST / (1e5)} BONK. Can play until your deck of cards runs out or you're out of BONK`,
-        label: "Start Attempt!"
+        label: "Start Attempt!",
+        disabled: phase == 3 ? false : true
     }
 
     return c.json(buttons);
 })
 
 app.post("/3/start", async (c) => {
+    if (phase != 3) { return c.json({ error: "Game not on phase 3!" }, 403); }
+
     const { account } = await c.req.json();
     try {
         const user = await prisma.player.findFirst({ where: { wallet: account } });
@@ -1045,6 +1051,7 @@ app.post("/3/start", async (c) => {
  * Phase 3: Red/Black
  */
 app.get("/3/redblack", async (c) => {
+
     let buttons: ActionGetResponse = {
         icon: `${url}/public/bus.webp`,
         title: "Red / Black",
@@ -1061,13 +1068,16 @@ app.get("/3/redblack", async (c) => {
                     label: "BLACK"
                 }
             ]
-        }
+        },
+        disabled: phase == 3 ? false : true
     }
 
     return c.json(buttons);
 })
 
 app.post("/3/redblack", async (c) => {
+    if (phase != 3) { return c.json({ error: "Game not on phase 3!" }, 403); }
+
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     try {
@@ -1141,13 +1151,16 @@ app.get("/3/highlow", async (c) => {
                     label: "LOWER"
                 }
             ]
-        }
+        },
+        disabled: phase == 3 ? false : true
     }
 
     return c.json(buttons);
 })
 
 app.post("/3/highlow", async (c) => {
+    if (phase != 3) { return c.json({ error: "Game not on phase 3!" }, 403); }
+
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     try {
@@ -1227,13 +1240,16 @@ app.get("/3/insideoutside", async (c) => {
                     label: "OUTSIDE"
                 }
             ]
-        }
+        },
+        disabled: phase == 3 ? false : true
     }
 
     return c.json(buttons);
 })
 
 app.post("/3/insideoutside", async (c) => {
+    if (phase != 3) { return c.json({ error: "Game not on phase 3!" }, 403); }
+
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     try {
@@ -1330,13 +1346,16 @@ app.get("/3/suit", async (c) => {
                     label: "♥"
                 }
             ]
-        }
+        },
+        disabled: phase == 3 ? false : true
     }
 
     return c.json(buttons);
 })
 
 app.post("/3/suit", async (c) => {
+    if (phase != 3) { return c.json({ error: "Game not on phase 3!" }, 403); }
+
     const { account } = await c.req.json();
     const accountKey = new PublicKey(account);
     try {
