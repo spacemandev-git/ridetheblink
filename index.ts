@@ -1038,9 +1038,9 @@ app.post("/3/start", async (c) => {
             message: `Starting Phase3 Attempt`
         }
 
-        await prisma.confirmingTransactions.create({
+        await prisma.confirmingTransactions.update({
+            where: { wallet: account },
             data: {
-                wallet: account,
                 pendingBonk: PHASE3_ATTEMPT_COST / (1e5)
             }
         })
