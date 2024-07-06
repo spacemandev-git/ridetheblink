@@ -12,6 +12,8 @@ import { PrismaClient } from '@prisma/client';
 import type { WebhookEvent } from "./webhook-interface";
 const prisma = new PrismaClient();
 
+const phase: number = parseInt(process.env.PHASE as string) || 0;
+
 interface Card {
     value: number,
     suit: "Hearts" | "Diamonds" | "Clubs" | "Spades",
@@ -40,14 +42,6 @@ app.use('*', cors({
 }));
 app.use('/actions.json', serveStatic({ path: "./actions.json" }));
 app.use('/public/*', serveStatic({ root: "./" }));
-
-/**
- * Debug Method
- */
-app.get("/", async (c) => {
-    console.log(deck);
-    return c.text("Hello World!");
-})
 
 app.post("/webhook", async (c) => {
     const authorization = c.req.header("authorization");
@@ -103,6 +97,29 @@ async function createEmptyTransaction(account: string): Promise<string> {
     return Buffer.from(txn.serialize()).toString("base64");
 }
 
+app.use("/", async (c, next) => {
+    if (phase == 0) {
+        return c.status(404);
+    } else if (phase == 1) {
+        if (c.req.path.startsWith("/1")) {
+            return next();
+        } else {
+            return c.status(404);
+        }
+    } else if (phase == 2) {
+        if (c.req.path.startsWith("/2")) {
+            return next();
+        } else {
+            return c.status(404);
+        }
+    } else if (phase == 3) {
+        if (c.req.path.startsWith("/3")) {
+            return next();
+        } else {
+            return c.status(404);
+        }
+    }
+})
 /** Phase 1 */
 
 /**
