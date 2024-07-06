@@ -1268,7 +1268,7 @@ app.post("/3/insideoutside", async (c) => {
             throw new Error("You have unconfirmed bonk balance left to pay!")
         }
 
-        const playerPhase3 = await prisma.phase1.findFirst({ where: { wallet: account } });
+        const playerPhase3 = await prisma.phase3.findFirst({ where: { wallet: account } });
         if (!playerPhase3 || playerPhase3.card2value == 0) {
             throw new Error("Please play High/Low before you play Inside/Outside")
         }
@@ -1374,7 +1374,7 @@ app.post("/3/suit", async (c) => {
             throw new Error("You have unconfirmed bonk balance left to pay!")
         }
 
-        const playerPhase3 = await prisma.phase1.findFirst({ where: { wallet: account } });
+        const playerPhase3 = await prisma.phase3.findFirst({ where: { wallet: account } });
         if (!playerPhase3 || playerPhase3.card3value == 0) {
             throw new Error("Please play Inside/Outside before you play Suit")
         }
