@@ -1103,7 +1103,11 @@ app.post("/3/redblack", async (c) => {
         }
 
         const playerPhase3 = await prisma.phase3.findFirst({ where: { wallet: account } });
-        if (playerPhase3 != null || playerPhase3!.card1value != 0) {
+        if (playerPhase3 == null) {
+            throw new Error("Go back to start the attempt again!");
+        }
+
+        if (playerPhase3.card1value != 0) {
             throw new Error("You're already past this step")
         }
 
