@@ -1116,9 +1116,9 @@ app.post("/3/redblack", async (c) => {
         const choice = c.req.query("q") as "RED" | "BLACK";
         const card1 = playerDeck.pop() as Card;
 
-        await prisma.phase3.create({
+        await prisma.phase3.update({
+            where: { wallet: account },
             data: {
-                wallet: account,
                 card1display: card1!.display,
                 card1suit: card1!.suit,
                 card1value: card1!.value
